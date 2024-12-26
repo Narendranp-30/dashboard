@@ -41,89 +41,100 @@
             center: [78.9629, 20.5937], // India center coordinates
             zoom: 5
         });
-
-        const apiKey = 'WWZuYTlGbExETXhzbGtuNnJCSHNucXlzZTRLMEZHOE1uY1NZQXJ0ag=='; // Replace with your API key
+        const apiKey = 'WWZuYTlGbExETXhzbGtuNnJCSHNucXlzZTRLMEZHOE1uY1NZQXJ0ag=='; // API key for dropdowns
         const stateDropdown = document.getElementById("state");
         const districtDropdown = document.getElementById("district");
+        let bloodBanksData = []; // Placeholder for data.json contents
 
-        // Fetch states in India
-        async function fetchStates() {
-            const response = await fetch("https://api.countrystatecity.in/v1/countries/IN/states", {
-                headers: { "X-CSCAPI-KEY": apiKey }
-            });
-            const states = await response.json();
-            states.forEach(state => {
-                const option = document.createElement("option");
-                option.value = state.iso2;
-                option.textContent = state.name;
-                stateDropdown.appendChild(option);
-            });
+        // Load blood bank data from data.json
+        async function loadBloodBankData() {
+            try {
+                const response = await fetch('data.json');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch data.json: ${response.statusText}`);
+                }
+                bloodBanksData = await response.json();
+                console.log('Blood bank data loaded:', bloodBanksData);
+
+                // Populate states dropdown
+                const states = [...new Set(bloodBanksData.map(bank => bank.State))];
+                states.forEach(state => {
+                    const option = document.createElement("option");
+                    option.value = state;
+                    option.textContent = state;
+                    stateDropdown.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading data.json:', error);
+            }
         }
 
-        // Fetch districts for a selected state
-        async function fetchDistricts(stateIso) {
-            const response = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/${stateIso}/cities`, {
-                headers: { "X-CSCAPI-KEY": apiKey }
-            });
-            const districts = await response.json();
+        // Populate districts dropdown based on selected state
+        function populateDistricts(state) {
+            const districts = [...new Set(bloodBanksData
+                .filter(bank => bank.State === state)
+                .map(bank => bank.District))];
+
             districtDropdown.innerHTML = '<option value="">--Select District--</option>';
             districts.forEach(district => {
                 const option = document.createElement("option");
-                option.value = district.name;
-                option.textContent = district.name;
+                option.value = district;
+                option.textContent = district;
                 districtDropdown.appendChild(option);
             });
         }
 
-        // Fetch blood banks by state and district
-        async function fetchBloodBanks(state, district) {
-            try {
-                const response = await fetch(`https://your-blood-bank-api.com/bloodbanks?state=${state}&district=${district}`);
-                const bloodBanks = await response.json();
+        // Display blood banks on map
+        function displayBloodBanks(state, district) {
+            const filteredBanks = bloodBanksData.filter(
+                bank => bank.State === state && bank.District === district
+            );
 
-                // Clear existing markers
-                const markers = document.getElementsByClassName("mapboxgl-marker");
-                while (markers.length > 0) {
-                    markers[0].remove();
-                }
+            console.log(`Filtered banks for ${state}, ${district}:`, filteredBanks);
 
-                // Add markers for blood banks
-                bloodBanks.forEach(bank => {
-                    new mapboxgl.Marker()
-                        .setLngLat([bank.longitude, bank.latitude])
-                        .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(bank.name))
-                        .addTo(map);
-                });
+            // Clear existing markers
+            document.querySelectorAll('.mapboxgl-marker').forEach(marker => marker.remove());
 
-                // Re-center the map
-                if (bloodBanks.length > 0) {
-                    const [lng, lat] = [bloodBanks[0].longitude, bloodBanks[0].latitude];
-                    map.setCenter([lng, lat]);
-                    map.setZoom(12);
-                } else {
-                    alert("No blood banks found for this location.");
-                }
-            } catch (error) {
-                console.error("Error fetching blood banks:", error);
+            // Add markers for filtered blood banks
+            filteredBanks.forEach(bank => {
+                new mapboxgl.Marker()
+                    .setLngLat([bank.Longitude, bank.Latitude])
+                    .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(`
+                        <h3>${bank["Blood Bank Name"]}</h3>
+                        <p>${bank.Address}</p>
+                        <p>Contact: ${bank["Contact No"] || bank.Mobile || "N/A"}</p>
+                    `))
+                    .addTo(map);
+            });
+
+            // Adjust map view to show all markers
+            if (filteredBanks.length > 0) {
+                const bounds = new mapboxgl.LngLatBounds();
+                filteredBanks.forEach(bank => bounds.extend([bank.Longitude, bank.Latitude]));
+                map.fitBounds(bounds, { padding: 50 });
+            } else {
+                alert("No blood banks found for this location.");
             }
         }
 
         // Event listeners
         stateDropdown.addEventListener("change", () => {
-            const stateIso = stateDropdown.value;
-            if (stateIso) {
-                fetchDistricts(stateIso);
+            const state = stateDropdown.value;
+            if (state) {
+                populateDistricts(state);
             }
         });
 
         districtDropdown.addEventListener("change", () => {
-            const state = stateDropdown.options[stateDropdown.selectedIndex].text;
+            const state = stateDropdown.value;
             const district = districtDropdown.value;
-            fetchBloodBanks(state, district);
+            displayBloodBanks(state, district);
         });
 
-        // Initialize states
-        fetchStates();
+        // Initialize application
+        (async function initialize() {
+            await loadBloodBankData(); // Load blood bank data from data.json
+        })();
     </script>
 </body>
 </html>
