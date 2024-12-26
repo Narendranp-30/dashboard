@@ -19,28 +19,111 @@
 <body>
     <h1>Blood Bank Locator</h1>
     <div class="controls">
-        <label for="pincode">Enter Pincode:</label>
-        <input type="text" id="pincode" />
-        <button id="search">Search</button>
+        <label for="state">Select State:</label>
+        <select id="state">
+            <option value="">--Select State--</option>
+        </select>
+        <label for="district">Select District:</label>
+        <select id="district">
+            <option value="">--Select District--</option>
+        </select>
     </div>
     <div id="map"></div>
-    <div id="results"></div>
 
     <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
     <script>
-        document.getElementById("search").addEventListener("click", async () => {
-            const pincode = document.getElementById("pincode").value;
-            const response = await fetch(`http://localhost:3000/fetch-blood-banks/${pincode}`);
-            const resultsDiv = document.getElementById("results");
-            resultsDiv.innerHTML = "";
+        // Mapbox Access Token
+        mapboxgl.accessToken = 'pk.eyJ1IjoibmFyZW5kcmFucCIsImEiOiJjbTUyZGI4cHcxd2ZqMmpwN2UyNWRjMHVyIn0.Gyfvbz9a7iHJYJ5Lcst6zw';
 
-            if (response.ok) {
-                const data = await response.json();
-                resultsDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-            } else {
-                resultsDiv.textContent = "No blood banks found for this pincode.";
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [78.9629, 20.5937], // India center coordinates
+            zoom: 5
+        });
+
+        const apiKey = 'WWZuYTlGbExETXhzbGtuNnJCSHNucXlzZTRLMEZHOE1uY1NZQXJ0ag=='; // Replace with your API key
+        const stateDropdown = document.getElementById("state");
+        const districtDropdown = document.getElementById("district");
+
+        // Fetch states in India
+        async function fetchStates() {
+            const response = await fetch("https://api.countrystatecity.in/v1/countries/IN/states", {
+                headers: { "X-CSCAPI-KEY": apiKey }
+            });
+            const states = await response.json();
+            states.forEach(state => {
+                const option = document.createElement("option");
+                option.value = state.iso2;
+                option.textContent = state.name;
+                stateDropdown.appendChild(option);
+            });
+        }
+
+        // Fetch districts for a selected state
+        async function fetchDistricts(stateIso) {
+            const response = await fetch(`https://api.countrystatecity.in/v1/countries/IN/states/${stateIso}/cities`, {
+                headers: { "X-CSCAPI-KEY": apiKey }
+            });
+            const districts = await response.json();
+            districtDropdown.innerHTML = '<option value="">--Select District--</option>';
+            districts.forEach(district => {
+                const option = document.createElement("option");
+                option.value = district.name;
+                option.textContent = district.name;
+                districtDropdown.appendChild(option);
+            });
+        }
+
+        // Fetch blood banks by state and district
+        async function fetchBloodBanks(state, district) {
+            try {
+                const response = await fetch(`https://your-blood-bank-api.com/bloodbanks?state=${state}&district=${district}`);
+                const bloodBanks = await response.json();
+
+                // Clear existing markers
+                const markers = document.getElementsByClassName("mapboxgl-marker");
+                while (markers.length > 0) {
+                    markers[0].remove();
+                }
+
+                // Add markers for blood banks
+                bloodBanks.forEach(bank => {
+                    new mapboxgl.Marker()
+                        .setLngLat([bank.longitude, bank.latitude])
+                        .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(bank.name))
+                        .addTo(map);
+                });
+
+                // Re-center the map
+                if (bloodBanks.length > 0) {
+                    const [lng, lat] = [bloodBanks[0].longitude, bloodBanks[0].latitude];
+                    map.setCenter([lng, lat]);
+                    map.setZoom(12);
+                } else {
+                    alert("No blood banks found for this location.");
+                }
+            } catch (error) {
+                console.error("Error fetching blood banks:", error);
+            }
+        }
+
+        // Event listeners
+        stateDropdown.addEventListener("change", () => {
+            const stateIso = stateDropdown.value;
+            if (stateIso) {
+                fetchDistricts(stateIso);
             }
         });
+
+        districtDropdown.addEventListener("change", () => {
+            const state = stateDropdown.options[stateDropdown.selectedIndex].text;
+            const district = districtDropdown.value;
+            fetchBloodBanks(state, district);
+        });
+
+        // Initialize states
+        fetchStates();
     </script>
 </body>
 </html>
