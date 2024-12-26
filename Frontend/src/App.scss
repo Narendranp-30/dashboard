@@ -1,0 +1,58 @@
+.app {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+}
+
+.app__container {
+  display: flex;
+  flex-direction: row;
+  transition: all 0.3s ease;
+}
+
+.sidebar-visible {
+  margin-left: 250px;  /* Adjust this for visible sidebar */
+}
+
+.sidebar-hidden {
+  margin-left: 0;  /* Adjust this for hidden sidebar */
+}
+
+.app__hamburger {
+  display: none;  /* Initially hidden */
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 25px;
+  padding: 10px;
+  background-color: transparent;
+  border: none;
+  z-index: 10;
+}
+
+.hamburger__icon {
+  width: 100%;
+  height: 4px;
+  background-color: #333;
+  border-radius: 5px;
+}
+
+.app__content {
+  flex-grow: 1;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .app__hamburger {
+    display: flex;  /* Show hamburger icon on smaller screens */
+  }
+
+  .app__container {
+    flex-direction: column;
+  }
+
+  .sidebar-hidden {
+    display: none;  /* Hide sidebar by default on small screens */
+  }
+}

@@ -1,0 +1,11 @@
+// Dashboard.scss
+.dashboard {
+    display: flex;
+  }
+  
+  .dashboard__content {
+    margin-left: 250px; /* Adjusts to the width of the sidebar */
+    padding: 20px;
+    flex-grow: 1;
+  }
+  

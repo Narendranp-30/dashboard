@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Locator</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <style>
+        #map {
+            width: 100%;
+            height: 500px;
+            margin-top: 20px;
+        }
+        .controls {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Blood Bank Locator</h1>
+    <div class="controls">
+        <label for="pincode">Enter Pincode:</label>
+        <input type="text" id="pincode" />
+        <button id="search">Search</button>
+    </div>
+    <div id="map"></div>
+    <div id="results"></div>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <script>
+        document.getElementById("search").addEventListener("click", async () => {
+            const pincode = document.getElementById("pincode").value;
+            const response = await fetch(`http://localhost:3000/fetch-blood-banks/${pincode}`);
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "";
+
+            if (response.ok) {
+                const data = await response.json();
+                resultsDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+            } else {
+                resultsDiv.textContent = "No blood banks found for this pincode.";
+            }
+        });
+    </script>
+</body>
+</html>

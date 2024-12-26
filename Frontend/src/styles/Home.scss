@@ -1,0 +1,85 @@
+.home {
+  display: flex;
+  flex-direction: row;
+   /* Fixes the overall layout width */
+  height: 100vh; /* Ensures the page occupies the full viewport height */
+  overflow: hidden; /* Prevents horizontal scrolling */
+  position: relative;
+  background-color: #fff;
+}
+
+.home__hamburger {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 100;
+  display: flex; /* Ensure it's always visible */
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.hamburger__icon {
+  width: 30px;
+  height: 4px;
+  background-color: #333;
+  border-radius: 2px;
+}
+
+
+@media (max-width: 768px) {
+  .home__hamburger {
+    display: flex; /* Show hamburger icon on smaller screens */
+  }
+}
+
+.home__content {
+  flex-grow: 1;
+  padding: 20px;
+  margin-left: 250px; /* Leaves space for the sidebar */
+  transition: margin-left 0.3s ease; /* Smooth transition for sidebar toggle */
+  background: linear-gradient(to right, #ffffff, #ffffff);
+  
+}
+
+.home__content--expanded {
+  margin-left: 0; /* Adjusts when sidebar is hidden */
+}
+
+.home__iframe-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 40px); /* Adjusts height to account for padding */
+}
+
+.home__iframe {
+  width: 1250px;
+  max-width: 1510px;
+  height: 790px;
+  border: none;
+  
+}
+
+.sidenav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100vh;
+  background-color: #2f3b52;
+  color: #fff;
+  z-index: 99;
+  overflow-y: auto;
+  transition: transform 0.3s ease; /* Smooth toggle effect */
+}
+
+.sidenav--hidden {
+  transform: translateX(-100%); /* Slide sidebar out of view */
+}
+
+@media (max-width: 768px) {
+  .home__content {
+    margin-left: 0; /* No fixed margin for smaller screens */
+  }
+}

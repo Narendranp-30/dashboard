@@ -1,0 +1,90 @@
+.sidenav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 250px;
+  background-color: #2f3b52;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1000;
+
+  &--open {
+    transform: translateX(0);
+  }
+
+  &--closed {
+    transform: translateX(-100%);
+  }
+}
+
+.sidenav__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sidenav__user-icon {
+  font-size: 6rem;
+  margin-right: 10px;
+}
+
+.sidenav__title {
+  font-size: 1.2rem;
+  word-break: break-word;
+}
+
+.sidenav__menu {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.sidenav__menu li {
+  margin: 10px 0;
+}
+
+.sidenav__menu a {
+  text-decoration: none;
+  color: #fff;
+  font-size: 1rem;
+  transition: color 0.3s;
+}
+
+.sidenav__menu a:hover {
+  color: #00bcd4;
+}
+
+.sidenav__logout {
+  margin-top: auto;
+  text-align: center;
+}
+
+.sidenav__logout button {
+  background-color: #ff4d4d;
+  color: #fff;
+  padding: 10px;
+  border: none;
+  font-size: 1rem;
+  width: 100%;
+  cursor: pointer;
+}
+
+.sidenav__logout button:hover {
+  background-color: #e60000;
+}
+
+.hamburger {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1100;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+  color: #e60000;
+}
