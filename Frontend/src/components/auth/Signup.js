@@ -38,6 +38,7 @@ function Signup() {
   };
 
   return (
+    <div className="login-page">
     <div className="container">
       <div className="login-box">
         <svg
@@ -109,6 +110,7 @@ function Signup() {
           </Link>
         </p>
       </div>
+    </div>
     </div>
   );
 }
