@@ -41,7 +41,7 @@ const SideNav = () => {
             <Link to="/updates">Updates</Link>
           </li>
           <li>
-            <Link to="/about">About Us</Link>
+            <Link to="/history">History</Link>
           </li>
           <li>
             <Link to="/contact">Contact Us</Link>

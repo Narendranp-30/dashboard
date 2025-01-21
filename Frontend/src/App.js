@@ -5,6 +5,7 @@ import Signup from './components/auth/Signup';
 import ReceiverDashboard from './components/dashboard/ReceiverDashboard';
 import DonorDashboard from './components/dashboard/DonorDashboard';
 import Home from './components/pages/Home';
+import BloodRequest from './components/pages/BloodRequest';
 import SideNav from './components/dashboard/SideNav'; // Import the sidebar
 import './App.scss';  // Add global styles for the hamburger menu
 
@@ -31,6 +32,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/receiver-dashboard" element={<ReceiverDashboard />} />
             <Route path="/donor-dashboard" element={<DonorDashboard />} />
+            <Route path="/blood-request" element={<BloodRequest />} />
             <Route path="/" element={<Login />} />
           </Routes>
         </div>
