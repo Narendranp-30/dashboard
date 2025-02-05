@@ -6,8 +6,11 @@ import ReceiverDashboard from './components/dashboard/ReceiverDashboard';
 import DonorDashboard from './components/dashboard/DonorDashboard';
 import Home from './components/pages/Home';
 import BloodRequest from './components/pages/BloodRequest';
-import SideNav from './components/dashboard/SideNav'; // Import the sidebar
-import './App.scss';  // Add global styles for the hamburger menu
+import SideNav from './components/dashboard/SideNav';
+import MyDetails from './components/pages/MyDetails';
+
+import { AuthProvider } from './components/Context/AuthContext';
+import './App.scss';
 
 function App() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
@@ -17,27 +20,25 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className="app">
-        {/* Hamburger Icon */}
-      
-
-        {/* Sidebar */}
-        {isSidebarVisible && <SideNav />}
-        
-        <div className="app__content">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/receiver-dashboard" element={<ReceiverDashboard />} />
-            <Route path="/donor-dashboard" element={<DonorDashboard />} />
-            <Route path="/blood-request" element={<BloodRequest />} />
-            <Route path="/" element={<Login />} />
-          </Routes>
+    <AuthProvider>
+      <Router>
+        <div className="app">
+          {isSidebarVisible && <SideNav />}
+          <div className="app__content">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/home" element={<Home />} />
+              <Route path="/receiver-dashboard" element={<ReceiverDashboard />} />
+              <Route path="/donor-dashboard" element={<DonorDashboard />} />
+              <Route path="/blood-request" element={<BloodRequest />} />
+              <Route path="/my-details" element={<MyDetails />} />
+              <Route path="/" element={<Login />} />
+            </Routes>
+          </div>
         </div>
-      </div>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 
