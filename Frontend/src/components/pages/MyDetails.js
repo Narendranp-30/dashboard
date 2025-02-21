@@ -14,11 +14,26 @@ function MyDetails() {
 
   const fetchDonorDetails = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/donor/details');
+      const userEmail = localStorage.getItem('userEmail');
+      console.log('Attempting to fetch details for email:', userEmail); // Debug log
+
+      if (!userEmail) {
+        console.log('No email found in localStorage');
+        return;
+      }
+
+      const response = await axios.get(`http://localhost:5000/api/donor/details?email=${userEmail}`);
+      console.log('API Response:', response); // Log full response
+      console.log('Donor data received:', response.data); // Log just the data
+
+      if (response.data.length === 0) {
+        console.log('No donor records found for this email');
+      }
+
       setDonorDetails(response.data);
-      setFormData(response.data[0] || {}); // Initialize form data with donor details
+      setFormData(response.data[0] || {});
     } catch (error) {
-      console.error('Error fetching donor details:', error);
+      console.error('Error fetching donor details:', error.response?.data || error);
     }
   };
 

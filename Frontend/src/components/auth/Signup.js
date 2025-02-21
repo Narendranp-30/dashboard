@@ -1,39 +1,91 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom'; // Import Link for navigation
+import { validatePassword, validateEmail, validatePhoneNumber } from '../../utils/validation';
 import '../../styles/Login.scss'; // Import the same SCSS for styles
 
 function Signup() {
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Email validation
+    if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Phone number validation
+    const phoneValidation = validatePhoneNumber(formData.phoneNumber);
+    if (!phoneValidation.isValid) {
+      newErrors.phoneNumber = phoneValidation.errors;
+    }
+
+    // Password validation
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      newErrors.password = passwordValidation.errors;
+    }
+
+    // Confirm password validation
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
+    setSuccessMessage('');
+
+    if (!validateForm()) {
       return;
     }
 
     try {
       const response = await axios.post('http://localhost:5000/api/signup', {
-        email,
-        phoneNumber,
-        password,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        password: formData.password,
       });
-      console.log('Signup Successful:', response.data);
 
-      // Clear the form after successful submission
-      setEmail('');
-      setPhoneNumber('');
-      setPassword('');
-      setConfirmPassword('');
-      alert('Signup Successful! Please login to continue.');
-      window.location.reload(); // Refresh the form
+      setSuccessMessage('Signup Successful! Please login to continue.');
+      setFormData({
+        email: '',
+        phoneNumber: '',
+        password: '',
+        confirmPassword: ''
+      });
     } catch (error) {
-      console.error('Signup Failed:', error.response?.data || error.message);
-      alert('Signup Failed. Please try again.');
+      setErrors(prev => ({
+        ...prev,
+        submit: error.response?.data?.message || 'Signup failed. Please try again.'
+      }));
     }
   };
 
@@ -61,43 +113,71 @@ function Signup() {
         </svg>
 
         <h2>Sign Up</h2>
+        {successMessage && <div className="success-message">{successMessage}</div>}
+        
         <form onSubmit={handleSubmit} className="form">
           <div className="form__field">
             <input
               type="email"
-              placeholder="info@mailaddress.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              className={errors.email ? 'error' : ''}
             />
+            {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
           <div className="form__field">
             <input
-              type="text"
-              placeholder="Phone Number"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              required
+              type="tel"
+              name="phoneNumber"
+              placeholder="Phone Number (10 digits)"
+              value={formData.phoneNumber}
+              onChange={handleChange}
+              className={errors.phoneNumber ? 'error' : ''}
+              maxLength="10"
             />
+            {errors.phoneNumber && (
+              <div className="error-text">
+                {Array.isArray(errors.phoneNumber) 
+                  ? errors.phoneNumber.map((err, index) => (
+                      <div key={index}>{err}</div>
+                    ))
+                  : errors.phoneNumber}
+              </div>
+            )}
           </div>
           <div className="form__field">
             <input
               type="password"
-              placeholder="••••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className={errors.password ? 'error' : ''}
             />
+            {errors.password && (
+              <div className="error-text">
+                {Array.isArray(errors.password) 
+                  ? errors.password.map((err, index) => (
+                      <div key={index}>{err}</div>
+                    ))
+                  : errors.password}
+              </div>
+            )}
           </div>
           <div className="form__field">
             <input
               type="password"
+              name="confirmPassword"
               placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={errors.confirmPassword ? 'error' : ''}
             />
+            {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
           </div>
+          {errors.submit && <div className="error-text">{errors.submit}</div>}
           <div className="form__field">
             <input type="submit" value="Sign Up" />
           </div>

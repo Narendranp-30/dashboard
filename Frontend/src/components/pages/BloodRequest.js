@@ -2,80 +2,72 @@ import React, { useState } from 'react';
 import axios from 'axios'; // Import Axios for making HTTP requests
 import '../../styles/DonarForm.scss'; // Ensure this file contains the correct styles
 import SideNav from '../dashboard/SideNav';
-function DonorForm() {
+
+function ReceiverForm() {
   const [formData, setFormData] = useState({
+    email: localStorage.getItem('userEmail'), // Add email from localStorage
     name: '',
     age: '',
     contact: '',
     bloodGroup: '',
-    teetotaler: false,
-    height: '',
-    weight: '',
     state: '',
     district: '',
     city: '',
     address: '',
-    healthDefects: '',
-    donationCertificate: null,
   });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     });
-  };
-
-  const handleFileChange = (e) => {
-    setFormData({ ...formData, donationCertificate: e.target.files[0] });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Prepare form data to be sent to the backend
-    const donorData = new FormData();
-    for (const key in formData) {
-      donorData.append(key, formData[key]);
-    }
-
     try {
-      // Send the form data to the backend using Axios
-      const response = await axios.post('http://localhost:5000/api/donor-details', donorData, {
-        headers: {
-          'Content-Type': 'multipart/form-data', // Important for file uploads
-        },
-      });
-      console.log('Donor Form Data:', response.data);
-      alert('Donor form submitted successfully!');
-      
-      // Reset the form
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        alert('Please login first');
+        return;
+      }
+
+      // Include email in the form data
+      const receiverData = {
+        ...formData,
+        email: userEmail
+      };
+
+      console.log('Submitting receiver data:', receiverData);
+      const response = await axios.post('http://localhost:5000/api/receiver', receiverData);
+
+      console.log('Receiver Form Response:', response.data);
+      alert('Receiver form submitted successfully!');
+
+      // Reset the form but keep the email
       setFormData({
+        email: userEmail,
         name: '',
         age: '',
         contact: '',
         bloodGroup: '',
-        teetotaler: false,
-        height: '',
-        weight: '',
         state: '',
         district: '',
         city: '',
         address: '',
-        healthDefects: '',
-        donationCertificate: null,
       });
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Error submitting form. Please try again.');
+      alert(error.response?.data?.message || 'Error submitting form. Please try again.');
     }
   };
 
   return (
     <div className="blood-request-form-container">
-    <SideNav/>
-      <h1 className="form-title">Donor Registration Form</h1>
+      <SideNav />
+      <h1 className="form-title">Receiver Registration Form</h1>
       <form className="blood-request__form" onSubmit={handleSubmit}>
         <div className="form__field">
           <label htmlFor="name">Name:</label>
@@ -135,43 +127,6 @@ function DonorForm() {
         </div>
 
         <div className="form__field">
-          <label htmlFor="teetotaler">
-            <input
-              type="checkbox"
-              id="teetotaler"
-              name="teetotaler"
-              checked={formData.teetotaler}
-              onChange={handleChange}
-            />
-            Are you a teetotaler?
-          </label>
-        </div>
-
-        <div className="form__field">
-          <label htmlFor="height">Height (cm):</label>
-          <input
-            type="number"
-            id="height"
-            name="height"
-            value={formData.height}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form__field">
-          <label htmlFor="weight">Weight (kg):</label>
-          <input
-            type="number"
-            id="weight"
-            name="weight"
-            value={formData.weight}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form__field">
           <label htmlFor="state">State:</label>
           <input
             type="text"
@@ -218,30 +173,10 @@ function DonorForm() {
           ></textarea>
         </div>
 
-        <div className="form__field">
-          <label htmlFor="healthDefects">Health Defects (if any):</label>
-          <textarea
-            id="healthDefects"
-            name="healthDefects"
-            value={formData.healthDefects}
-            onChange={handleChange}
-          ></textarea>
-        </div>
-
-        <div className="form__field">
-          <label htmlFor="donationCertificate">Blood Donation Certificate:</label>
-          <input
-            type="file"
-            id="donationCertificate"
-            name="donationCertificate"
-            onChange={handleFileChange}
-          />
-        </div>
-
         <button type="submit" className="form__submit">Submit</button>
       </form>
     </div>
   );
 }
 
-export default DonorForm;
+export default ReceiverForm;

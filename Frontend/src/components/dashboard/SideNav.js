@@ -35,7 +35,7 @@ const SideNav = () => {
             <Link to="/blood-request">Blood Request</Link>
           </li>
           <li>
-            <Link to="/blood-banks">Blood Banks</Link>
+            <Link to="/blood-banks">Blood Banks</Link> {/* Added Blood Bank link */}
           </li>
           <li>
             <Link to="/updates">Updates</Link>

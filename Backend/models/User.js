@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Check if model exists before creating
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -17,4 +18,5 @@ const userSchema = new mongoose.Schema({
   // Removed role field
 });
 
-module.exports = mongoose.model('User', userSchema);
+// Use this pattern to prevent model overwrite error
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);

@@ -8,6 +8,9 @@ import Home from './components/pages/Home';
 import BloodRequest from './components/pages/BloodRequest';
 import SideNav from './components/dashboard/SideNav';
 import MyDetails from './components/pages/MyDetails';
+import Updates from './components/pages/updates';
+import BloodBank from './components/pages/BloodBank';
+import ReceiverMatch from './components/pages/ReceiverMatch';
 
 import { AuthProvider } from './components/Context/AuthContext';
 import './App.scss';
@@ -33,6 +36,9 @@ function App() {
               <Route path="/donor-dashboard" element={<DonorDashboard />} />
               <Route path="/blood-request" element={<BloodRequest />} />
               <Route path="/my-details" element={<MyDetails />} />
+              <Route path="/updates" element={<Updates />} />
+              <Route path="/receiver-match" element={<ReceiverMatch />} />
+              <Route path="/blood-banks" element={<BloodBank />} />
               <Route path="/" element={<Login />} />
             </Routes>
           </div>

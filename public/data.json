@@ -1,0 +1,38 @@
+[
+  {
+    "State": "Tamil Nadu",
+    "District": "Chennai",
+    "Blood Bank Name": "Government General Hospital Blood Bank",
+    "Address": "Park Town, Chennai-600003",
+    "Contact No": "044-25305000",
+    "Latitude": 13.0827,
+    "Longitude": 80.2707
+  },
+  {
+    "State": "Tamil Nadu",
+    "District": "Chennai",
+    "Blood Bank Name": "Apollo Hospital Blood Bank",
+    "Address": "Greams Road, Chennai-600006",
+    "Contact No": "044-28290200",
+    "Latitude": 13.0569,
+    "Longitude": 80.2425
+  },
+  {
+    "State": "Karnataka",
+    "District": "Bangalore",
+    "Blood Bank Name": "Victoria Hospital Blood Bank",
+    "Address": "Fort Road, Bangalore-560002",
+    "Contact No": "080-26701150",
+    "Latitude": 12.9716,
+    "Longitude": 77.5946
+  },
+  {
+    "State": "Maharashtra",
+    "District": "Mumbai",
+    "Blood Bank Name": "KEM Hospital Blood Bank",
+    "Address": "Parel, Mumbai-400012",
+    "Contact No": "022-24107000",
+    "Latitude": 19.0760,
+    "Longitude": 72.8777
+  }
+] 

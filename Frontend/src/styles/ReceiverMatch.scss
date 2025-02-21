@@ -1,0 +1,47 @@
+.receiver-match-container {
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+
+  .receiver-match-content {
+    flex: 1;
+    padding: 20px;
+    
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .details-card {
+      background-color: #f9f9f9;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      h3, h4 {
+        margin: 0 0 10px;
+        color: #2f3b52;
+      }
+
+      p {
+        margin: 5px 0;
+        color: #555;
+      }
+
+      .matched-donors {
+        list-style-type: none;
+        padding: 0;
+
+        li {
+          margin: 5px 0;
+        }
+      }
+    }
+  }
+} 

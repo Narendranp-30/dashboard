@@ -29,7 +29,10 @@ const SideNav2 = () => {
         </div>
         <ul className="sidenav__menu">
           <li>
-            <Link to="/donor-dashboard">Requests</Link>
+            <Link to="/donor-dashboard">Donar Registration</Link>
+          </li>
+          <li>
+            <Link to="/receiver-match">Updates</Link>
           </li>
           <li>
             <Link to="/history">History</Link>

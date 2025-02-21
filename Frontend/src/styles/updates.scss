@@ -1,0 +1,114 @@
+// Variables
+$primary-color: #4CAF50;
+$danger-color: #f44336;
+$background-color: #f9f9f9;
+$border-color: #ddd;
+$shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+$hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); // Added for container hover
+
+// Container
+.updates-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+
+  h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+  }
+}
+.send-request-button {
+  background-color: #4CAF50; // Green color
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+
+  &:hover {
+    background-color: #45a049; // Darker green on hover
+  }
+}
+// Details Card (Added hover effect)
+.details-card {
+  background-color: $background-color;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: rgba(0, 0, 0, 0.56) 0px 22px 70px 4px;
+  transition: all 0.3s ease; // Smooth hover effect
+
+  &:hover {
+    transform: translateY(-5px); // Lift the card
+    box-shadow: $hover-shadow;
+  }
+
+  p {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #555;
+
+    strong {
+      color: #333;
+    }
+  }
+}
+
+// Matched Donors List
+.matched-donors {
+  margin-top: 10px;
+  padding-left: 20px;
+
+  li {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #333;
+  }
+}
+
+// Button Container (Enhanced hover effects)
+.button-container {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+
+  button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+
+    &.edit-button {
+      background-color: $primary-color;
+      color: white;
+
+      &:hover {
+        background-color: darken($primary-color, 10%);
+        transform: scale(1.05);
+      }
+    }
+
+    &.delete-button {
+      background-color: $danger-color;
+      color: white;
+
+      &:hover {
+        background-color: darken($danger-color, 10%);
+        transform: translateY(-2px);
+      }
+    }
+
+    &:active {
+      transform: none !important;
+    }
+  }
+}
