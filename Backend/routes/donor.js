@@ -21,17 +21,26 @@ router.post('/', upload.single('donationCertificate'), async (req, res) => {
   try {
     console.log('Received donor data:', req.body);
     
-    // Check if donor already exists with this contact
-    const existingDonor = await Donor.findOne({ contact: req.body.contact });
+    // Check if donor already exists with this contact or email
+    const existingDonor = await Donor.findOne({ 
+      $or: [
+        { contact: req.body.contact },
+        { donorEmail: req.body.donorEmail }
+      ]
+    });
+    
     if (existingDonor) {
       return res.status(400).json({ 
-        error: 'A donor with this contact number already exists',
-        details: 'Please use a different contact number or update your existing record'
+        error: existingDonor.contact === req.body.contact 
+          ? 'A donor with this contact number already exists'
+          : 'A donor with this email already exists',
+        details: 'Please use different contact/email or update your existing record'
       });
     }
     
     const donorData = {
-      email: req.body.email,
+      email: req.body.email, // User's email from localStorage
+      donorEmail: req.body.donorEmail, // Donor's email address
       name: req.body.name,
       age: req.body.age,
       contact: req.body.contact,
@@ -56,11 +65,10 @@ router.post('/', upload.single('donationCertificate'), async (req, res) => {
     res.status(201).json(savedDonor);
   } catch (error) {
     console.error('Error saving donor:', error);
-    // Send more user-friendly error message
     if (error.code === 11000) {
       res.status(400).json({ 
-        error: 'Duplicate contact number', 
-        details: 'This contact number is already registered' 
+        error: 'Duplicate entry', 
+        details: 'This contact number or email is already registered' 
       });
     } else {
       res.status(500).json({ 
@@ -91,7 +99,8 @@ router.put('/:contact', upload.single('donationCertificate'), async (req, res) =
 
     res.json(updatedDonor);
   } catch (error) {
-    res.status(500).json({ error: 'Error updating donor details' });
+    console.error('Error updating donor details:', error);
+    res.status(500).json({ message: 'Error updating donor details', error: error.message });
   }
 });
 

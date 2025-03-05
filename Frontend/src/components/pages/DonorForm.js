@@ -4,7 +4,7 @@ import '../../styles/DonarForm.scss'; // Ensure this file contains the correct s
 
 function DonorForm() {
   const [formData, setFormData] = useState({
-    email: localStorage.getItem('userEmail'), // Add email from localStorage
+    email: localStorage.getItem('userEmail'), // Get email from localStorage
     name: '',
     age: '',
     contact: '',
@@ -18,6 +18,7 @@ function DonorForm() {
     address: '',
     healthDefects: '',
     donationCertificate: null,
+    donorEmail: '', // Add new email field for donor's email
   });
 
   const [errors, setErrors] = useState({
@@ -116,6 +117,7 @@ function DonorForm() {
         address: '',
         healthDefects: '',
         donationCertificate: null,
+        donorEmail: '',
       });
     } catch (error) {
       console.error('Error submitting form:', error.response?.data || error);
@@ -139,6 +141,19 @@ function DonorForm() {
             id="name"
             name="name"
             value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        {/* Email Field */}
+        <div className="form__field">
+          <label htmlFor="donorEmail">Email:</label>
+          <input
+            type="email"
+            id="donorEmail"
+            name="donorEmail"
+            value={formData.donorEmail}
             onChange={handleChange}
             required
           />

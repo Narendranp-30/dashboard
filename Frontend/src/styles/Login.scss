@@ -323,4 +323,19 @@ a {
   }
 }
 
+.admin-link {
+  margin-top: 10px;
+  font-size: 0.9em;
+  
+  a {
+    color: #666;
+    text-decoration: none;
+    
+    &:hover {
+      color: #4CAF50;
+      text-decoration: underline;
+    }
+  }
+}
+
 }

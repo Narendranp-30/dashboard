@@ -9,13 +9,11 @@ function Login() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('receiver');
   const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setErrorMessage('');
     try {
       const response = await axios.post('http://localhost:5000/api/login', { email, password, role });
@@ -31,8 +29,6 @@ function Login() {
       navigate(role === 'donor' ? '/donor-dashboard' : '/receiver-dashboard');
     } catch (error) {
       setErrorMessage(error.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -79,6 +75,9 @@ function Login() {
           <p>
             Don't have an account?{' '}
             <Link to="/signup">Sign up here</Link>
+          </p>
+          <p className="admin-link">
+            <Link to="/admin">Admin Login</Link>
           </p>
         </div>
       </div>

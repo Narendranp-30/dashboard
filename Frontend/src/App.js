@@ -11,22 +11,17 @@ import MyDetails from './components/pages/MyDetails';
 import Updates from './components/pages/updates';
 import BloodBank from './components/pages/BloodBank';
 import ReceiverMatch from './components/pages/ReceiverMatch';
+import Admin from './components/auth/Admin';
+import AdminDashboard from './components/admin/AdminDashboard';
 
 import { AuthProvider } from './components/Context/AuthContext';
 import './App.scss';
 
 function App() {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsSidebarVisible(!isSidebarVisible);
-  };
-
   return (
     <AuthProvider>
       <Router>
         <div className="app">
-          {isSidebarVisible && <SideNav />}
           <div className="app__content">
             <Routes>
               <Route path="/login" element={<Login />} />
@@ -39,6 +34,8 @@ function App() {
               <Route path="/updates" element={<Updates />} />
               <Route path="/receiver-match" element={<ReceiverMatch />} />
               <Route path="/blood-banks" element={<BloodBank />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/" element={<Login />} />
             </Routes>
           </div>

@@ -5,7 +5,39 @@ import SideNav from '../dashboard/SideNav';
 
 const Updates = () => {
   const [matches, setMatches] = useState([]);
+  const [requestStatuses, setRequestStatuses] = useState({});
+  const [requestTimes, setRequestTimes] = useState({});
   const userEmail = localStorage.getItem('userEmail');
+  const [sentRequests, setSentRequests] = useState(new Set());
+
+  const handleSendRequest = async (donor, match) => {
+    if (donor.bloodGroup !== match.receiver.bloodGroup || donor.district !== match.receiver.district) {
+      alert('This donor does not perfectly match your request criteria.');
+      return;
+    }
+
+    try {
+      const requestData = {
+        senderEmail: userEmail,
+        receiverEmail: donor.email,
+        message: `Blood Request for ${donor.bloodGroup} in ${donor.district}`,
+      };
+
+      await axios.post('http://localhost:5000/api/send-request', requestData);
+      setSentRequests(prev => new Set(prev).add(donor.email));
+      alert('Request sent successfully!');
+    } catch (error) {
+      console.error('Error sending request:', error);
+      if (error.response) {
+        const errorMessage = error.response.data.details 
+          ? `Failed to send request: ${error.response.data.message}\n${JSON.stringify(error.response.data.details, null, 2)}`
+          : error.response.data.message || 'Failed to send request. Please try again.';
+        alert(errorMessage);
+      } else {
+        alert('Failed to send request. Please check your connection and try again.');
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -18,34 +50,67 @@ const Updates = () => {
         const response = await axios.get(`http://localhost:5000/api/matching?email=${userEmail}`);
         console.log('Matches received:', response.data);
         setMatches(response.data);
+
+        const statusResponse = await axios.get(`http://localhost:5000/api/sent-requests?senderEmail=${userEmail}`);
+        const statusMap = {};
+        const timeMap = {};
+        statusResponse.data.forEach(request => {
+          statusMap[request.receiverEmail] = request.status;
+          timeMap[request.receiverEmail] = request.createdAt;
+        });
+        setRequestStatuses(statusMap);
+        setRequestTimes(timeMap);
+        
+        setSentRequests(new Set(Object.keys(statusMap)));
       } catch (error) {
         console.error('Error fetching matches:', error);
       }
     };
 
     fetchMatches();
+
+    const interval = setInterval(() => {
+      setRequestTimes(prevTimes => ({ ...prevTimes }));
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [userEmail]);
 
-  // Function to handle the "Send Request" button click
-  const handleSendRequest = async (donor, match) => {
-    if (donor.bloodGroup !== match.receiver.bloodGroup || donor.district !== match.receiver.district) {
-      alert('This donor does not perfectly match your request criteria.');
-      return;
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'accepted':
+        return '#4CAF50';
+      case 'denied':
+        return '#f44336';
+      case 'pending':
+        return '#ff9800';
+      default:
+        return '#757575';
     }
+  };
 
-    try {
-      const response = await axios.post('http://localhost:5000/api/send-request', {
-        senderEmail: userEmail,
-        receiverEmail: donor.email,
-        message: `Request for blood group ${donor.bloodGroup}`,
-      });
-
-      console.log('Request sent successfully:', response.data);
-      alert('Request sent successfully!');
-    } catch (error) {
-      console.error('Error sending request:', error);
-      alert('Failed to send request. Please try again.');
+  const getStatusText = (status) => {
+    switch(status) {
+      case 'accepted':
+        return 'Request Accepted';
+      case 'denied':
+        return 'Request Denied';
+      case 'pending':
+        return 'Request Pending';
+      default:
+        return 'Send Request';
     }
+  };
+
+  // Update the render method to show countdown
+  const getTimeRemaining = (timestamp) => {
+    const now = new Date();
+    const requestTime = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - requestTime) / 1000);
+    const remainingSeconds = 60 - diffInSeconds; // 1 minute = 60 seconds
+
+    if (remainingSeconds <= 0) return 'SOS Alert Sent';
+    return `SOS Alert in: ${remainingSeconds} seconds`;
   };
 
   return (
@@ -71,12 +136,23 @@ const Updates = () => {
                         <p><strong>Name:</strong> {donor.name}</p>
                         <p><strong>Contact:</strong> {donor.contact}</p>
                         <p><strong>Location:</strong> {donor.district}, {donor.city}</p>
-                        <button
-                          className="send-request-button"
-                          onClick={() => handleSendRequest(donor, match)}
-                        >
-                          Send Request
-                        </button>
+                        <div className="request-status">
+                          <button
+                            className={`send-request-button ${requestStatuses[donor.email] || ''}`}
+                            onClick={() => handleSendRequest(donor, match)}
+                            disabled={sentRequests.has(donor.email)}
+                            style={{
+                              backgroundColor: getStatusColor(requestStatuses[donor.email])
+                            }}
+                          >
+                            {getStatusText(requestStatuses[donor.email])}
+                          </button>
+                          {requestTimes[donor.email] && (
+                            <p className="timer-text">
+                              {getTimeRemaining(requestTimes[donor.email])}
+                            </p>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>

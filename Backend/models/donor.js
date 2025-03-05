@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 
 const donorSchema = new mongoose.Schema({
-  email: { type: String, required: true },
+  email: { type: String, required: true }, // User's email from localStorage
+  donorEmail: { type: String, required: true }, // Donor's email address
   name: String,
   age: Number,
   contact: { type: String, required: true, unique: true }, // ✅ Ensure contact is unique

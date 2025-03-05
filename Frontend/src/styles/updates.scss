@@ -112,3 +112,108 @@ $hover-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); // Added for container hover
     }
   }
 }
+
+.request-time {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 5px;
+  font-style: italic;
+}
+
+.request-status {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 10px;
+
+  .send-request-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    color: white;
+    transition: all 0.3s ease;
+
+    &:disabled {
+      opacity: 0.8;
+      cursor: default;
+    }
+
+    &.pending {
+      background-color: #ff9800;
+    }
+
+    &.accepted {
+      background-color: #4CAF50;
+    }
+
+    &.denied {
+      background-color: #f44336;
+    }
+  }
+
+  .status-text {
+    margin: 0;
+    font-size: 0.9em;
+    font-weight: 500;
+  }
+}
+
+.request-timer {
+  font-size: 0.9em;
+  color: #ff9800;
+  margin-top: 5px;
+  font-weight: 500;
+
+  &.urgent {
+    color: #ff4444;
+    animation: pulse 1s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.timer-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.stop-alert-button {
+  padding: 4px 8px;
+  background-color: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #cc0000;
+  }
+}
+
+.timer-text {
+  font-size: 0.9em;
+  color: #ff9800;
+  margin-top: 5px;
+  font-weight: 500;
+  
+  &.urgent {
+    color: #f44336;
+    animation: pulse 1s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}

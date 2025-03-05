@@ -43,10 +43,12 @@ function MyDetails() {
 
   const handleSave = async () => {
     try {
-      const { contact } = formData;
+      const { contact, ...updateData } = formData; // Exclude _id from update data
+      console.log('Updating donor with data:', updateData); // Debug log
+
       const response = await axios.put(
         `http://localhost:5000/api/donor/${contact}`,
-        formData
+        updateData
       );
       setDonorDetails([response.data]); // Update donor details with the response
       setIsEditing(false); // Disable edit mode
