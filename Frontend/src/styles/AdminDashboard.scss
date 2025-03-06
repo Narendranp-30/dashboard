@@ -133,4 +133,123 @@
       color: white;
     }
   }
+
+  .header-with-download {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    .download-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+
+      &:hover {
+        background-color: #45a049;
+      }
+
+      svg {
+        font-size: 16px;
+      }
+    }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+
+    .user-type {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: 500;
+
+      &.donor {
+        background-color: #4CAF50;
+        color: white;
+      }
+
+      &.receiver {
+        background-color: #2196F3;
+        color: white;
+      }
+
+      svg {
+        font-size: 12px;
+      }
+    }
+  }
+
+  .user-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    
+    .card-content {
+      flex: 1;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #eee;
+
+      .action-button {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 8px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9em;
+
+        &.download {
+          background-color: #4CAF50;
+          color: white;
+
+          &:hover {
+            background-color: #45a049;
+          }
+        }
+
+        &.delete {
+          background-color: #f44336;
+          color: white;
+
+          &:hover {
+            background-color: #da190b;
+          }
+        }
+
+        svg {
+          font-size: 14px;
+        }
+      }
+    }
+
+    &:hover {
+      .card-actions {
+        opacity: 1;
+      }
+    }
+  }
 } 

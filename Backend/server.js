@@ -288,6 +288,28 @@ app.get('/api/admin/requests', async (req, res) => {
   }
 });
 
+// Add test endpoint with sound
+app.get('/test-telegram-alert', async (req, res) => {
+  try {
+    const testMessage = {
+      donor: {
+        name: 'Test Donor',
+        contact: '1234567890'
+      },
+      requester: {
+        bloodGroup: 'O+',
+        district: 'Test District'
+      }
+    };
+
+    await sendTelegramAlert(testMessage.donor, testMessage.requester);
+    res.json({ message: 'Test alert sent successfully with sound' });
+  } catch (error) {
+    console.error('Test failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start Server
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
