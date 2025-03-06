@@ -18,10 +18,17 @@ import { AuthProvider } from './components/Context/AuthContext';
 import './App.scss';
 
 function App() {
+  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarVisible(!isSidebarVisible);
+  };
+
   return (
     <AuthProvider>
       <Router>
         <div className="app">
+          {isSidebarVisible && <SideNav />}
           <div className="app__content">
             <Routes>
               <Route path="/login" element={<Login />} />

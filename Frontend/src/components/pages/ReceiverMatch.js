@@ -28,15 +28,18 @@ function ReceiverMatch() {
 
   const handleAccept = async (requestId) => {
     try {
-      await axios.put(`http://localhost:5000/api/received-requests/${requestId}`, {
+      const response = await axios.put(`http://localhost:5000/api/received-requests/${requestId}`, {
         status: 'accepted'
       });
+      
+      // Update the local state to reflect the change
       setReceivedRequests(prevRequests =>
         prevRequests.map(request =>
           request._id === requestId ? { ...request, status: 'accepted' } : request
         )
       );
-      alert('Request accepted successfully!');
+      
+      alert('Request accepted successfully! The requester has been notified via email.');
     } catch (error) {
       console.error('Error accepting request:', error);
       alert('Failed to accept request. Please try again.');
@@ -45,15 +48,18 @@ function ReceiverMatch() {
 
   const handleDeny = async (requestId) => {
     try {
-      await axios.put(`http://localhost:5000/api/received-requests/${requestId}`, {
+      const response = await axios.put(`http://localhost:5000/api/received-requests/${requestId}`, {
         status: 'denied'
       });
+      
+      // Update the local state to reflect the change
       setReceivedRequests(prevRequests =>
         prevRequests.map(request =>
           request._id === requestId ? { ...request, status: 'denied' } : request
         )
       );
-      alert('Request denied successfully!');
+      
+      alert('Request denied. The requester has been notified via email.');
     } catch (error) {
       console.error('Error denying request:', error);
       alert('Failed to deny request. Please try again.');

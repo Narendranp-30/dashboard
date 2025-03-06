@@ -288,57 +288,6 @@ app.get('/api/admin/requests', async (req, res) => {
   }
 });
 
-// Admin delete routes
-app.delete('/api/admin/donors/:email', async (req, res) => {
-  try {
-    const { email } = req.params;
-    
-    // Delete donor
-    const deletedDonor = await Donor.findOneAndDelete({ email });
-    if (!deletedDonor) {
-      return res.status(404).json({ message: 'Donor not found' });
-    }
-
-    // Delete associated requests
-    await RequestModel.deleteMany({ 
-      $or: [
-        { senderEmail: email },
-        { receiverEmail: email }
-      ]
-    });
-
-    res.json({ message: 'Donor and associated requests deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting donor:', error);
-    res.status(500).json({ message: 'Error deleting donor' });
-  }
-});
-
-app.delete('/api/admin/receivers/:email', async (req, res) => {
-  try {
-    const { email } = req.params;
-    
-    // Delete receiver
-    const deletedReceiver = await Receiver.findOneAndDelete({ email });
-    if (!deletedReceiver) {
-      return res.status(404).json({ message: 'Receiver not found' });
-    }
-
-    // Delete associated requests
-    await RequestModel.deleteMany({ 
-      $or: [
-        { senderEmail: email },
-        { receiverEmail: email }
-      ]
-    });
-
-    res.json({ message: 'Receiver and associated requests deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting receiver:', error);
-    res.status(500).json({ message: 'Error deleting receiver' });
-  }
-});
-
 // Start Server
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
