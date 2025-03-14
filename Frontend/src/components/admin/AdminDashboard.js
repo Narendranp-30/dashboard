@@ -344,6 +344,168 @@ function AdminDashboard() {
     }
   };
 
+  const downloadRequestsPDF = (requests) => {
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
+      
+      // Set initial position and spacing
+      let yPos = 20;
+      const lineHeight = 10;
+      const margin = 20;
+      
+      // Add header with styling
+      doc.setFillColor(41, 128, 185); // Blue header
+      doc.rect(0, 0, 210, 15, 'F');
+      doc.setTextColor(255, 255, 255); // White text
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Blood Donation Management System', margin, 10);
+      
+      // Reset text color for content
+      doc.setTextColor(0, 0, 0);
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Blood Requests Data', margin, yPos);
+      yPos += lineHeight * 2;
+      
+      // Add data
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      
+      if (requests.length === 0) {
+        doc.text('No requests available', margin, yPos);
+      } else {
+        // Add table header
+        doc.setFillColor(189, 195, 199); // Light gray for header
+        doc.rect(margin - 5, yPos - 5, 170, 10, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text('From', margin, yPos);
+        doc.text('To', margin + 50, yPos);
+        doc.text('Status', margin + 100, yPos);
+        doc.text('Date', margin + 140, yPos);
+        yPos += lineHeight * 1.5;
+        
+        // Add table rows
+        requests.forEach((request, index) => {
+          // Add new page if needed
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+            
+            // Add header to new page
+            doc.setFillColor(41, 128, 185);
+            doc.rect(0, 0, 210, 15, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Blood Donation Management System - Continued', margin, 10);
+            doc.setTextColor(0, 0, 0);
+            
+            // Add table header to new page
+            yPos = 30;
+            doc.setFillColor(189, 195, 199);
+            doc.rect(margin - 5, yPos - 5, 170, 10, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.text('From', margin, yPos);
+            doc.text('To', margin + 50, yPos);
+            doc.text('Status', margin + 100, yPos);
+            doc.text('Date', margin + 140, yPos);
+            yPos += lineHeight * 1.5;
+          }
+          
+          // Alternate row colors
+          const rowColor = index % 2 === 0 ? 245 : 255;
+          doc.setFillColor(rowColor, rowColor, rowColor);
+          doc.rect(margin - 5, yPos - 5, 170, 10, 'F');
+          
+          // Add row data
+          doc.setFont('helvetica', 'normal');
+          
+          // Truncate emails if too long
+          const maxEmailLength = 20;
+          const fromEmail = request.senderEmail || 'N/A';
+          const toEmail = request.receiverEmail || 'N/A';
+          
+          const displayFromEmail = fromEmail.length > maxEmailLength 
+            ? fromEmail.substring(0, maxEmailLength) + '...' 
+            : fromEmail;
+            
+          const displayToEmail = toEmail.length > maxEmailLength 
+            ? toEmail.substring(0, maxEmailLength) + '...' 
+            : toEmail;
+          
+          doc.text(displayFromEmail, margin, yPos);
+          doc.text(displayToEmail, margin + 50, yPos);
+          doc.text(request.status || 'N/A', margin + 100, yPos);
+          
+          const requestDate = request.createdAt 
+            ? new Date(request.createdAt).toLocaleDateString() 
+            : 'N/A';
+          doc.text(requestDate, margin + 140, yPos);
+          
+          yPos += lineHeight * 1.2;
+          
+          // Add message on next line if it exists
+          if (request.message) {
+            yPos += lineHeight * 0.5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Message:', margin, yPos);
+            yPos += lineHeight;
+            
+            // Handle long messages with word wrapping
+            const maxWidth = 160;
+            const splitMessage = doc.splitTextToSize(request.message, maxWidth);
+            doc.setFont('helvetica', 'normal');
+            
+            splitMessage.forEach(line => {
+              doc.text(line, margin, yPos);
+              yPos += lineHeight;
+              
+              // Add new page if needed
+              if (yPos > 270) {
+                doc.addPage();
+                yPos = 20;
+                
+                // Add header to new page
+                doc.setFillColor(41, 128, 185);
+                doc.rect(0, 0, 210, 15, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Blood Donation Management System - Continued', margin, 10);
+                doc.setTextColor(0, 0, 0);
+                yPos += 10;
+              }
+            });
+            
+            yPos += lineHeight * 0.5;
+          }
+        });
+      }
+      
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Page ${i} of ${pageCount} - Generated on ${new Date().toLocaleDateString()}`, 
+          doc.internal.pageSize.getWidth() / 2, 
+          doc.internal.pageSize.getHeight() - 10, 
+          { align: 'center' });
+      }
+      
+      // Save the PDF
+      doc.save('blood-requests-data.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('There was an error generating the PDF. Please try again.');
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
     localStorage.removeItem('adminEmail');
@@ -574,7 +736,7 @@ function AdminDashboard() {
               <h2>Blood Requests</h2>
               <button 
                 className="download-button"
-                onClick={() => downloadAllDataPDF(requests, 'requests-data')}
+                onClick={() => downloadRequestsPDF(requests)}
               >
                 <FaDownload /> Download Requests Data
               </button>
