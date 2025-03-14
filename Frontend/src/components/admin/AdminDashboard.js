@@ -88,91 +88,260 @@ function AdminDashboard() {
   };
 
   const downloadUserPDF = (user) => {
-    const doc = new jsPDF();
-    const lineHeight = 10;
-    let yPos = 20;
-
-    // Add title
-    doc.setFontSize(16);
-    doc.text(`User Details - ${user.name}`, 20, yPos);
-    yPos += lineHeight * 2;
-
-    // Add user information
-    doc.setFontSize(12);
-    doc.text(`Type: ${user.type}`, 20, yPos);
-    yPos += lineHeight;
-    doc.text(`Email: ${user.email}`, 20, yPos);
-    yPos += lineHeight;
-    doc.text(`Contact: ${user.contact}`, 20, yPos);
-    yPos += lineHeight;
-    doc.text(`Blood Group: ${user.bloodGroup}`, 20, yPos);
-    yPos += lineHeight;
-    doc.text(`Age: ${user.age}`, 20, yPos);
-    yPos += lineHeight;
-    doc.text(`Location: ${user.district}, ${user.city}, ${user.state}`, 20, yPos);
-    yPos += lineHeight * 2;
-
-    // Add donation history if user is a donor
-    if (user.type === 'Donor') {
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
+      
+      // Set initial position and spacing
+      let yPos = 20;
+      const lineHeight = 10;
+      const margin = 20;
+      
+      // Add header with styling
+      doc.setFillColor(41, 128, 185); // Blue header
+      doc.rect(0, 0, 210, 15, 'F');
+      doc.setTextColor(255, 255, 255); // White text
       doc.setFontSize(14);
-      doc.text('Donation History', 20, yPos);
-      yPos += lineHeight;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Blood Donation Management System', margin, 10);
+      
+      // Reset text color for content
+      doc.setTextColor(0, 0, 0);
+      
+      // Add title with user name
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`User Details: ${user.name || 'Unknown User'}`, margin, yPos);
+      yPos += lineHeight * 2;
+      
+      // Add user information section
+      doc.setFillColor(236, 240, 241); // Light gray background
+      doc.rect(margin - 5, yPos - 5, 170, 70, 'F');
+      
+      // Add user details
       doc.setFontSize(12);
-      if (user.donationHistory && user.donationHistory.length > 0) {
-        user.donationHistory.forEach(donation => {
-          doc.text(`Date: ${new Date(donation.date).toLocaleDateString()}`, 20, yPos);
-          yPos += lineHeight;
-          doc.text(`Location: ${donation.location}`, 20, yPos);
-          yPos += lineHeight;
-          doc.text(`Recipient: ${donation.recipient || 'Not specified'}`, 20, yPos);
+      doc.setFont('helvetica', 'normal');
+      
+      // Helper function to add a line of text
+      const addLine = (label, value) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${label}:`, margin, yPos);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${value || 'Not provided'}`, margin + 40, yPos);
+        yPos += lineHeight;
+      };
+      
+      // Add user information
+      addLine('User Type', user.type || 'N/A');
+      addLine('Email', user.email || 'N/A');
+      addLine('Contact', user.contact || 'N/A');
+      addLine('Blood Group', user.bloodGroup || 'N/A');
+      addLine('Age', user.age || 'N/A');
+      
+      // Format location with available fields
+      const location = [user.district, user.city, user.state]
+        .filter(item => item && item.trim() !== '')
+        .join(', ');
+      addLine('Location', location || 'N/A');
+      
+      yPos += lineHeight;
+      
+      // Add donation history if user is a donor
+      if (user.type === 'Donor') {
+        yPos += lineHeight;
+        
+        // Add donation history header
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Donation History', margin, yPos);
+        yPos += lineHeight * 1.5;
+        
+        // Add donation history content
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        
+        if (user.donationHistory && user.donationHistory.length > 0) {
+          // Add table header
+          const tableTop = yPos;
+          doc.setFillColor(189, 195, 199); // Light gray for header
+          doc.rect(margin - 5, yPos - 5, 170, 10, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.text('Date', margin, yPos);
+          doc.text('Location', margin + 50, yPos);
+          doc.text('Recipient', margin + 100, yPos);
           yPos += lineHeight * 1.5;
-        });
-      } else {
-        doc.text('No donation history available', 20, yPos);
+          
+          // Add table rows
+          user.donationHistory.forEach((donation, index) => {
+            const rowColor = index % 2 === 0 ? 245 : 255; // Alternate row colors
+            doc.setFillColor(rowColor, rowColor, rowColor);
+            doc.rect(margin - 5, yPos - 5, 170, 10, 'F');
+            
+            const donationDate = donation.date ? new Date(donation.date).toLocaleDateString() : 'N/A';
+            doc.setFont('helvetica', 'normal');
+            doc.text(donationDate, margin, yPos);
+            doc.text(donation.location || 'N/A', margin + 50, yPos);
+            doc.text(donation.recipient || 'N/A', margin + 100, yPos);
+            yPos += lineHeight;
+            
+            // Add new page if needed
+            if (yPos > 270) {
+              doc.addPage();
+              yPos = 20;
+              
+              // Add header to new page
+              doc.setFillColor(41, 128, 185);
+              doc.rect(0, 0, 210, 15, 'F');
+              doc.setTextColor(255, 255, 255);
+              doc.setFontSize(14);
+              doc.setFont('helvetica', 'bold');
+              doc.text('Blood Donation Management System - Continued', margin, 10);
+              doc.setTextColor(0, 0, 0);
+              yPos += 10;
+            }
+          });
+        } else {
+          doc.text('No donation history available', margin, yPos);
+        }
       }
+      
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Page ${i} of ${pageCount} - Generated on ${new Date().toLocaleDateString()}`, 
+          doc.internal.pageSize.getWidth() / 2, 
+          doc.internal.pageSize.getHeight() - 10, 
+          { align: 'center' });
+      }
+      
+      // Save the PDF
+      doc.save(`${user.name || 'user'}-details.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('There was an error generating the PDF. Please try again.');
     }
-
-    doc.save(`${user.name}-details.pdf`);
   };
 
   const downloadAllDataPDF = (data, filename) => {
-    const doc = new jsPDF();
-    const lineHeight = 10;
-    let yPos = 20;
-
-    // Add title
-    doc.setFontSize(16);
-    doc.text(`${filename}`, 20, yPos);
-    yPos += lineHeight * 2;
-
-    // Add data
-    doc.setFontSize(12);
-    data.forEach((item, index) => {
-      doc.text(`${index + 1}. ${item.name || 'User ' + (index + 1)}`, 20, yPos);
-      yPos += lineHeight;
+    try {
+      // Create a new PDF document
+      const doc = new jsPDF();
       
-      if (yPos > 270) {
-        doc.addPage();
-        yPos = 20;
+      // Set initial position and spacing
+      let yPos = 20;
+      const lineHeight = 10;
+      const margin = 20;
+      
+      // Add header with styling
+      doc.setFillColor(41, 128, 185); // Blue header
+      doc.rect(0, 0, 210, 15, 'F');
+      doc.setTextColor(255, 255, 255); // White text
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Blood Donation Management System', margin, 10);
+      
+      // Reset text color for content
+      doc.setTextColor(0, 0, 0);
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${filename.replace('-data', ' Data')}`, margin, yPos);
+      yPos += lineHeight * 2;
+      
+      // Add data
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      
+      if (data.length === 0) {
+        doc.text('No data available', margin, yPos);
+      } else {
+        // Add table header
+        doc.setFillColor(189, 195, 199); // Light gray for header
+        doc.rect(margin - 5, yPos - 5, 170, 10, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.text('Name', margin, yPos);
+        doc.text('Blood Group', margin + 50, yPos);
+        doc.text('Contact', margin + 90, yPos);
+        doc.text('Location', margin + 130, yPos);
+        yPos += lineHeight * 1.5;
+        
+        // Add table rows
+        data.forEach((item, index) => {
+          // Add new page if needed
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+            
+            // Add header to new page
+            doc.setFillColor(41, 128, 185);
+            doc.rect(0, 0, 210, 15, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Blood Donation Management System - Continued', margin, 10);
+            doc.setTextColor(0, 0, 0);
+            
+            // Add table header to new page
+            yPos = 30;
+            doc.setFillColor(189, 195, 199);
+            doc.rect(margin - 5, yPos - 5, 170, 10, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.text('Name', margin, yPos);
+            doc.text('Blood Group', margin + 50, yPos);
+            doc.text('Contact', margin + 90, yPos);
+            doc.text('Location', margin + 130, yPos);
+            yPos += lineHeight * 1.5;
+          }
+          
+          // Alternate row colors
+          const rowColor = index % 2 === 0 ? 245 : 255;
+          doc.setFillColor(rowColor, rowColor, rowColor);
+          doc.rect(margin - 5, yPos - 5, 170, 10, 'F');
+          
+          // Add row data
+          doc.setFont('helvetica', 'normal');
+          doc.text(item.name || `User ${index + 1}`, margin, yPos);
+          doc.text(item.bloodGroup || 'N/A', margin + 50, yPos);
+          doc.text(item.contact || 'N/A', margin + 90, yPos);
+          
+          // Format location with available fields
+          const location = [item.district, item.city, item.state]
+            .filter(loc => loc && loc.trim() !== '')
+            .join(', ');
+          
+          // Truncate location if too long
+          const maxLocationLength = 25;
+          const displayLocation = location.length > maxLocationLength 
+            ? location.substring(0, maxLocationLength) + '...' 
+            : location || 'N/A';
+            
+          doc.text(displayLocation, margin + 130, yPos);
+          yPos += lineHeight * 1.2;
+        });
       }
       
-      if (item.email) doc.text(`   Email: ${item.email}`, 30, yPos); yPos += lineHeight;
-      if (item.bloodGroup) doc.text(`   Blood Group: ${item.bloodGroup}`, 30, yPos); yPos += lineHeight;
-      if (item.contact) doc.text(`   Contact: ${item.contact}`, 30, yPos); yPos += lineHeight;
-      if (item.district || item.city || item.state) {
-        doc.text(`   Location: ${[item.district, item.city, item.state].filter(Boolean).join(', ')}`, 30, yPos);
-        yPos += lineHeight;
+      // Add footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Page ${i} of ${pageCount} - Generated on ${new Date().toLocaleDateString()}`, 
+          doc.internal.pageSize.getWidth() / 2, 
+          doc.internal.pageSize.getHeight() - 10, 
+          { align: 'center' });
       }
       
-      yPos += lineHeight/2;
-      
-      if (yPos > 270) {
-        doc.addPage();
-        yPos = 20;
-      }
-    });
-
-    doc.save(`${filename}.pdf`);
+      // Save the PDF
+      doc.save(`${filename}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('There was an error generating the PDF. Please try again.');
+    }
   };
 
   const handleLogout = () => {
