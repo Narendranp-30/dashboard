@@ -13,6 +13,7 @@ import BloodBank from './components/pages/BloodBank';
 import ReceiverMatch from './components/pages/ReceiverMatch';
 import Admin from './components/auth/Admin';
 import AdminDashboard from './components/admin/AdminDashboard';
+import History from './components/pages/History';
 
 import { AuthProvider } from './components/Context/AuthContext';
 import './App.scss';
@@ -43,6 +44,7 @@ function App() {
               <Route path="/blood-banks" element={<BloodBank />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/history" element={<History />} />
               <Route path="/" element={<Login />} />
             </Routes>
           </div>

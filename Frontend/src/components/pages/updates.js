@@ -2,16 +2,19 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import '../../styles/updates.scss';
 import SideNav from '../dashboard/SideNav';
+import { FaCheck, FaInfoCircle } from 'react-icons/fa';
 
 const Updates = () => {
   const [matches, setMatches] = useState([]);
   const [requestStatuses, setRequestStatuses] = useState({});
   const [requestTimes, setRequestTimes] = useState({});
+  const [requestIds, setRequestIds] = useState({});
+  const [donatedRequests, setDonatedRequests] = useState({});
   const userEmail = localStorage.getItem('userEmail');
   const [sentRequests, setSentRequests] = useState(new Set());
   const [sosTimers, setSosTimers] = useState({});
   // In Updates.js, change 10 minutes to 1 minute for testing
-const SOS_DELAY = 1 * 60 * 1000; // 1 minute
+  const SOS_DELAY = 1 * 60 * 1000; // 1 minute
   const audioRef = useRef(new Audio('/sos-alert.mp3'));
 
   const getTimeDifference = (timestamp) => {
@@ -48,12 +51,20 @@ const SOS_DELAY = 1 * 60 * 1000; // 1 minute
         const statusResponse = await axios.get(`http://localhost:5000/api/sent-requests?senderEmail=${userEmail}`);
         const statusMap = {};
         const timeMap = {};
+        const idMap = {};
+        const donatedMap = {};
+        
         statusResponse.data.forEach(request => {
           statusMap[request.receiverEmail] = request.status;
           timeMap[request.receiverEmail] = request.createdAt;
+          idMap[request.receiverEmail] = request._id;
+          donatedMap[request.receiverEmail] = request.donated || false;
         });
+        
         setRequestStatuses(statusMap);
         setRequestTimes(timeMap);
+        setRequestIds(idMap);
+        setDonatedRequests(donatedMap);
         
         setSentRequests(new Set(Object.keys(statusMap)));
       } catch (error) {
@@ -135,6 +146,12 @@ const SOS_DELAY = 1 * 60 * 1000; // 1 minute
         [donor.email]: currentTime.toISOString()
       }));
 
+      // Store request ID
+      setRequestIds(prev => ({
+        ...prev,
+        [donor.email]: response.data._id || response.data.request._id
+      }));
+
       // Create and store the timer
       const timerId = setTimeout(async () => {
         console.log('Timer triggered for donor:', donor.email);
@@ -171,6 +188,37 @@ const SOS_DELAY = 1 * 60 * 1000; // 1 minute
     } catch (error) {
       console.error('Error sending request:', error);
       alert('Failed to send request. Please try again.');
+    }
+  };
+
+  // Mark a request as donated (blood donation completed)
+  const handleMarkAsDonated = async (donorEmail) => {
+    try {
+      const requestId = requestIds[donorEmail];
+      
+      if (!requestId) {
+        alert('Cannot find this donation request. Please try again later.');
+        return;
+      }
+      
+      const response = await axios.put(`http://localhost:5000/api/history/mark-donated/${requestId}`);
+      
+      if (response.status === 200) {
+        // Update UI state
+        setDonatedRequests(prev => ({
+          ...prev,
+          [donorEmail]: true
+        }));
+        
+        alert('Blood donation has been successfully recorded. Thank you!');
+        
+        // Refresh matches to update the list
+        const matchesResponse = await axios.get(`http://localhost:5000/api/matching?email=${userEmail}`);
+        setMatches(matchesResponse.data);
+      }
+    } catch (error) {
+      console.error('Error marking request as donated:', error);
+      alert('Failed to record donation. Please try again later.');
     }
   };
 
@@ -219,17 +267,43 @@ const SOS_DELAY = 1 * 60 * 1000; // 1 minute
                         <p><strong>Contact:</strong> {donor.contact}</p>
                         <p><strong>Location:</strong> {donor.district}, {donor.city}</p>
                         <div className="request-status">
-                          <button
-                            className={`send-request-button ${requestStatuses[donor.email] || ''}`}
-                            onClick={() => handleSendRequest(donor, match)}
-                            disabled={sentRequests.has(donor.email)}
-                            style={{
-                              backgroundColor: getStatusColor(requestStatuses[donor.email])
-                            }}
-                          >
-                            {getStatusText(requestStatuses[donor.email])}
-                          </button>
-                          {requestTimes[donor.email] && (
+                          {!sentRequests.has(donor.email) ? (
+                            <button
+                              className="send-request-button"
+                              onClick={() => handleSendRequest(donor, match)}
+                            >
+                              Send Request
+                            </button>
+                          ) : requestStatuses[donor.email] === 'accepted' && !donatedRequests[donor.email] ? (
+                            <div className="donation-buttons">
+                              <button
+                                className="status-button accepted"
+                                disabled
+                              >
+                                Request Accepted
+                              </button>
+                              <button
+                                className="donated-button"
+                                onClick={() => handleMarkAsDonated(donor.email)}
+                              >
+                                <FaCheck /> Mark as Donated
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              className={`send-request-button ${requestStatuses[donor.email] || ''}`}
+                              disabled
+                              style={{
+                                backgroundColor: getStatusColor(requestStatuses[donor.email])
+                              }}
+                            >
+                              {donatedRequests[donor.email] 
+                                ? 'Blood Donated' 
+                                : getStatusText(requestStatuses[donor.email])}
+                            </button>
+                          )}
+                          
+                          {requestTimes[donor.email] && !donatedRequests[donor.email] && (
                             <p className="timer-text">
                               {getTimeRemaining(requestTimes[donor.email])}
                             </p>
@@ -241,6 +315,28 @@ const SOS_DELAY = 1 * 60 * 1000; // 1 minute
                 ) : (
                   <p>No matching donors found in your area.</p>
                 )}
+                
+                {/* Show recently donated donors */}
+                {match.recentlyDonatedMatchingDonors && match.recentlyDonatedMatchingDonors.length > 0 && (
+                  <div className="recently-donated-section">
+                    <h4>Recently Donated Donors ({match.recentlyDonatedMatchingDonors.length}):</h4>
+                    <ul className="matched-donors recently-donated">
+                      {match.recentlyDonatedMatchingDonors.map((donor, idx) => (
+                        <li key={idx} className="recently-donated-donor">
+                          <div className="donor-info">
+                            <p><strong>Name:</strong> {donor.name}</p>
+                            <p><strong>Contact:</strong> {donor.contact}</p>
+                            <p><strong>Location:</strong> {donor.district}, {donor.city}</p>
+                            <div className="donated-status">
+                              <FaInfoCircle />
+                              <span>This donor has already donated blood recently and is not eligible to donate at this time.</span>
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -250,4 +346,4 @@ const SOS_DELAY = 1 * 60 * 1000; // 1 minute
   );
 };
 
-export default Updates; 
+export default Updates;

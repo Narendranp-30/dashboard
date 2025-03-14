@@ -14,6 +14,7 @@ const donorRoute = require('./routes/donor');
 const receiverRoute = require('./routes/receiver');
 const matchingRoute = require('./routes/matching');
 const bloodBanksRoute = require('./routes/bloodBanks');
+const historyRoute = require('./routes/history');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/api/donor', donorRoute);
 app.use('/api/receiver', receiverRoute);
 app.use('/api/matching', matchingRoute);
 app.use('/api/blood-banks', bloodBanksRoute);
+app.use('/api/history', historyRoute);
 
 // Send Blood Request and Notify Donor
 app.post('/api/send-request', async (req, res) => {
