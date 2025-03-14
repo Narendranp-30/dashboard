@@ -5,6 +5,7 @@ import '../../styles/AdminDashboard.scss';
 import { FaDownload, FaUser, FaUserPlus, FaTrash, FaFilter } from 'react-icons/fa';
 import { TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import jsPDF from 'jspdf';
+import locationData from '../pages/data.json';
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -13,13 +14,70 @@ function AdminDashboard() {
   const [requests, setRequests] = useState([]);
   const [activeTab, setActiveTab] = useState('donors');
   const [allUsers, setAllUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [filters, setFilters] = useState({
     bloodGroup: '',
     state: '',
-    city: '',
-    district: ''
+    district: '',
+    city: ''
   });
-  const [filteredUsers, setFilteredUsers] = useState([]);
+  
+  // Derived data from location data
+  const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [cities, setCities] = useState([]);
+
+  useEffect(() => {
+    // Extract unique states from location data
+    const uniqueStates = [...new Set(locationData.map(item => item.State))].sort();
+    setStates(uniqueStates);
+  }, []);
+
+  useEffect(() => {
+    // Update districts based on selected state
+    if (filters.state) {
+      const stateDistricts = [...new Set(
+        locationData
+          .filter(item => item.State === filters.state)
+          .map(item => item.District)
+      )].sort();
+      setDistricts(stateDistricts);
+      setFilters({
+        ...filters,
+        district: '',
+        city: ''
+      });
+    } else {
+      setDistricts([]);
+      setFilters({
+        ...filters,
+        district: '',
+        city: ''
+      });
+    }
+  }, [filters.state]);
+
+  useEffect(() => {
+    // Update cities based on selected district and state
+    if (filters.state && filters.district) {
+      const districtCities = [...new Set(
+        locationData
+          .filter(item => item.State === filters.state && item.District === filters.district)
+          .map(item => item.City)
+      )].sort();
+      setCities(districtCities);
+      setFilters({
+        ...filters,
+        city: ''
+      });
+    } else {
+      setCities([]);
+      setFilters({
+        ...filters,
+        city: ''
+      });
+    }
+  }, [filters.state, filters.district]);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem('isAdmin');
@@ -41,12 +99,14 @@ function AdminDashboard() {
     }
     if (filters.state) {
       filtered = filtered.filter(user => user.state?.toLowerCase().includes(filters.state.toLowerCase()));
-    }
-    if (filters.city) {
-      filtered = filtered.filter(user => user.city?.toLowerCase().includes(filters.city.toLowerCase()));
-    }
-    if (filters.district) {
-      filtered = filtered.filter(user => user.district?.toLowerCase().includes(filters.district.toLowerCase()));
+      
+      if (filters.district) {
+        filtered = filtered.filter(user => user.district?.toLowerCase().includes(filters.district.toLowerCase()));
+        
+        if (filters.city) {
+          filtered = filtered.filter(user => user.city?.toLowerCase().includes(filters.city.toLowerCase()));
+        }
+      }
     }
     
     setFilteredUsers(filtered);
@@ -527,43 +587,92 @@ function AdminDashboard() {
 
   const FilterSection = () => (
     <div className="filter-section">
-      <FormControl size="small" style={{ minWidth: 120, marginRight: 10 }}>
-        <InputLabel>Blood Group</InputLabel>
+      <FormControl size="small">
+        <InputLabel id="blood-group-label">Blood Group</InputLabel>
         <Select
-          name="bloodGroup"
+          labelId="blood-group-label"
+          id="blood-group"
           value={filters.bloodGroup}
-          onChange={handleFilterChange}
           label="Blood Group"
+          onChange={(e) => setFilters({
+            ...filters,
+            bloodGroup: e.target.value
+          })}
         >
           <MenuItem value="">All</MenuItem>
-          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(group => (
-            <MenuItem key={group} value={group}>{group}</MenuItem>
+          <MenuItem value="A+">A+</MenuItem>
+          <MenuItem value="A-">A-</MenuItem>
+          <MenuItem value="B+">B+</MenuItem>
+          <MenuItem value="B-">B-</MenuItem>
+          <MenuItem value="AB+">AB+</MenuItem>
+          <MenuItem value="AB-">AB-</MenuItem>
+          <MenuItem value="O+">O+</MenuItem>
+          <MenuItem value="O-">O-</MenuItem>
+        </Select>
+      </FormControl>
+      
+      <FormControl size="small">
+        <InputLabel id="state-label">State</InputLabel>
+        <Select
+          labelId="state-label"
+          id="state"
+          value={filters.state}
+          label="State"
+          onChange={(e) => setFilters({
+            ...filters,
+            state: e.target.value
+          })}
+        >
+          <MenuItem value="">All</MenuItem>
+          {states.map((stateName) => (
+            <MenuItem key={stateName} value={stateName}>
+              {stateName}
+            </MenuItem>
           ))}
         </Select>
       </FormControl>
-      <TextField
-        size="small"
-        label="State"
-        name="state"
-        value={filters.state}
-        onChange={handleFilterChange}
-        style={{ marginRight: 10 }}
-      />
-      <TextField
-        size="small"
-        label="City"
-        name="city"
-        value={filters.city}
-        onChange={handleFilterChange}
-        style={{ marginRight: 10 }}
-      />
-      <TextField
-        size="small"
-        label="District"
-        name="district"
-        value={filters.district}
-        onChange={handleFilterChange}
-      />
+      
+      <FormControl size="small" disabled={!filters.state}>
+        <InputLabel id="district-label">District</InputLabel>
+        <Select
+          labelId="district-label"
+          id="district"
+          value={filters.district}
+          label="District"
+          onChange={(e) => setFilters({
+            ...filters,
+            district: e.target.value
+          })}
+        >
+          <MenuItem value="">All</MenuItem>
+          {districts.map((districtName) => (
+            <MenuItem key={districtName} value={districtName}>
+              {districtName}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      
+      <FormControl size="small" disabled={!filters.district}>
+        <InputLabel id="city-label">City</InputLabel>
+        <Select
+          labelId="city-label"
+          id="city"
+          value={filters.city}
+          label="City"
+          onChange={(e) => setFilters({
+            ...filters,
+            city: e.target.value
+          })}
+        >
+          <MenuItem value="">All</MenuItem>
+          {cities.map((cityName) => (
+            <MenuItem key={cityName} value={cityName}>
+              {cityName}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
     </div>
   );
 
