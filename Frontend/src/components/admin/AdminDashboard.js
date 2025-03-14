@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/AdminDashboard.scss';
-import { FaDownload, FaUser, FaUserPlus, FaTrash } from 'react-icons/fa';
+import { FaDownload, FaUser, FaUserPlus, FaTrash, FaFilter } from 'react-icons/fa';
+import { TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import jsPDF from 'jspdf';
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -11,6 +13,13 @@ function AdminDashboard() {
   const [requests, setRequests] = useState([]);
   const [activeTab, setActiveTab] = useState('donors');
   const [allUsers, setAllUsers] = useState([]);
+  const [filters, setFilters] = useState({
+    bloodGroup: '',
+    state: '',
+    city: '',
+    district: ''
+  });
+  const [filteredUsers, setFilteredUsers] = useState([]);
 
   useEffect(() => {
     const isAdmin = localStorage.getItem('isAdmin');
@@ -20,9 +29,38 @@ function AdminDashboard() {
     fetchAllData();
   }, [navigate]);
 
+  useEffect(() => {
+    applyFilters();
+  }, [filters, allUsers]);
+
+  const applyFilters = () => {
+    let filtered = allUsers;
+    
+    if (filters.bloodGroup) {
+      filtered = filtered.filter(user => user.bloodGroup === filters.bloodGroup);
+    }
+    if (filters.state) {
+      filtered = filtered.filter(user => user.state?.toLowerCase().includes(filters.state.toLowerCase()));
+    }
+    if (filters.city) {
+      filtered = filtered.filter(user => user.city?.toLowerCase().includes(filters.city.toLowerCase()));
+    }
+    if (filters.district) {
+      filtered = filtered.filter(user => user.district?.toLowerCase().includes(filters.district.toLowerCase()));
+    }
+    
+    setFilteredUsers(filtered);
+  };
+
+  const handleFilterChange = (event) => {
+    setFilters({
+      ...filters,
+      [event.target.name]: event.target.value
+    });
+  };
+
   const fetchAllData = async () => {
     try {
-      // Fetch all data
       const [donorsRes, receiversRes, requestsRes] = await Promise.all([
         axios.get('http://localhost:5000/api/admin/donors'),
         axios.get('http://localhost:5000/api/admin/receivers'),
@@ -33,7 +71,6 @@ function AdminDashboard() {
       setReceivers(receiversRes.data);
       setRequests(requestsRes.data);
 
-      // Combine and format users for the manage users tab
       const donorUsers = donorsRes.data.map(donor => ({
         ...donor,
         type: 'Donor'
@@ -42,10 +79,100 @@ function AdminDashboard() {
         ...receiver,
         type: 'Receiver'
       }));
-      setAllUsers([...donorUsers, ...receiverUsers]);
+      const combinedUsers = [...donorUsers, ...receiverUsers];
+      setAllUsers(combinedUsers);
+      setFilteredUsers(combinedUsers);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
+  };
+
+  const downloadUserPDF = (user) => {
+    const doc = new jsPDF();
+    const lineHeight = 10;
+    let yPos = 20;
+
+    // Add title
+    doc.setFontSize(16);
+    doc.text(`User Details - ${user.name}`, 20, yPos);
+    yPos += lineHeight * 2;
+
+    // Add user information
+    doc.setFontSize(12);
+    doc.text(`Type: ${user.type}`, 20, yPos);
+    yPos += lineHeight;
+    doc.text(`Email: ${user.email}`, 20, yPos);
+    yPos += lineHeight;
+    doc.text(`Contact: ${user.contact}`, 20, yPos);
+    yPos += lineHeight;
+    doc.text(`Blood Group: ${user.bloodGroup}`, 20, yPos);
+    yPos += lineHeight;
+    doc.text(`Age: ${user.age}`, 20, yPos);
+    yPos += lineHeight;
+    doc.text(`Location: ${user.district}, ${user.city}, ${user.state}`, 20, yPos);
+    yPos += lineHeight * 2;
+
+    // Add donation history if user is a donor
+    if (user.type === 'Donor') {
+      doc.setFontSize(14);
+      doc.text('Donation History', 20, yPos);
+      yPos += lineHeight;
+      doc.setFontSize(12);
+      if (user.donationHistory && user.donationHistory.length > 0) {
+        user.donationHistory.forEach(donation => {
+          doc.text(`Date: ${new Date(donation.date).toLocaleDateString()}`, 20, yPos);
+          yPos += lineHeight;
+          doc.text(`Location: ${donation.location}`, 20, yPos);
+          yPos += lineHeight;
+          doc.text(`Recipient: ${donation.recipient || 'Not specified'}`, 20, yPos);
+          yPos += lineHeight * 1.5;
+        });
+      } else {
+        doc.text('No donation history available', 20, yPos);
+      }
+    }
+
+    doc.save(`${user.name}-details.pdf`);
+  };
+
+  const downloadAllDataPDF = (data, filename) => {
+    const doc = new jsPDF();
+    const lineHeight = 10;
+    let yPos = 20;
+
+    // Add title
+    doc.setFontSize(16);
+    doc.text(`${filename}`, 20, yPos);
+    yPos += lineHeight * 2;
+
+    // Add data
+    doc.setFontSize(12);
+    data.forEach((item, index) => {
+      doc.text(`${index + 1}. ${item.name || 'User ' + (index + 1)}`, 20, yPos);
+      yPos += lineHeight;
+      
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      if (item.email) doc.text(`   Email: ${item.email}`, 30, yPos); yPos += lineHeight;
+      if (item.bloodGroup) doc.text(`   Blood Group: ${item.bloodGroup}`, 30, yPos); yPos += lineHeight;
+      if (item.contact) doc.text(`   Contact: ${item.contact}`, 30, yPos); yPos += lineHeight;
+      if (item.district || item.city || item.state) {
+        doc.text(`   Location: ${[item.district, item.city, item.state].filter(Boolean).join(', ')}`, 30, yPos);
+        yPos += lineHeight;
+      }
+      
+      yPos += lineHeight/2;
+      
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+    });
+
+    doc.save(`${filename}.pdf`);
   };
 
   const handleLogout = () => {
@@ -54,37 +181,10 @@ function AdminDashboard() {
     navigate('/admin');
   };
 
-  const downloadData = (data, filename) => {
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const href = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = href;
-    link.download = filename + '.json';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(href);
-  };
-
-  const downloadUserData = (user) => {
-    const jsonString = JSON.stringify(user, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
-    const href = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = href;
-    link.download = `${user.name}-data.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(href);
-  };
-
   const handleDelete = async (userId, userType) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         await axios.delete(`http://localhost:5000/api/admin/${userType.toLowerCase()}s/${userId}`);
-        // Refresh data after deletion
         fetchAllData();
         alert('User deleted successfully!');
       } catch (error) {
@@ -93,6 +193,48 @@ function AdminDashboard() {
       }
     }
   };
+
+  const FilterSection = () => (
+    <div className="filter-section">
+      <FormControl size="small" style={{ minWidth: 120, marginRight: 10 }}>
+        <InputLabel>Blood Group</InputLabel>
+        <Select
+          name="bloodGroup"
+          value={filters.bloodGroup}
+          onChange={handleFilterChange}
+          label="Blood Group"
+        >
+          <MenuItem value="">All</MenuItem>
+          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(group => (
+            <MenuItem key={group} value={group}>{group}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <TextField
+        size="small"
+        label="State"
+        name="state"
+        value={filters.state}
+        onChange={handleFilterChange}
+        style={{ marginRight: 10 }}
+      />
+      <TextField
+        size="small"
+        label="City"
+        name="city"
+        value={filters.city}
+        onChange={handleFilterChange}
+        style={{ marginRight: 10 }}
+      />
+      <TextField
+        size="small"
+        label="District"
+        name="district"
+        value={filters.district}
+        onChange={handleFilterChange}
+      />
+    </div>
+  );
 
   return (
     <div className="admin-dashboard">
@@ -133,15 +275,10 @@ function AdminDashboard() {
           <div className="data-container">
             <div className="header-with-download">
               <h2>All Users</h2>
-              <button 
-                className="download-button"
-                onClick={() => downloadData(allUsers, 'all-users')}
-              >
-                <FaDownload /> Download All Users
-              </button>
+              <FilterSection />
             </div>
             <div className="cards-grid">
-              {allUsers.map((user, index) => (
+              {filteredUsers.map((user, index) => (
                 <div key={index} className="user-card">
                   <div className="card-header">
                     <h3>{user.name}</h3>
@@ -154,15 +291,15 @@ function AdminDashboard() {
                     <p><strong>Email:</strong> {user.email}</p>
                     <p><strong>Contact:</strong> {user.contact}</p>
                     <p><strong>Blood Group:</strong> {user.bloodGroup}</p>
-                    <p><strong>Location:</strong> {user.district}, {user.city}</p>
+                    <p><strong>Location:</strong> {user.district}, {user.city}, {user.state}</p>
                     <p><strong>Age:</strong> {user.age}</p>
                   </div>
                   <div className="card-actions">
                     <button 
                       className="action-button download"
-                      onClick={() => downloadUserData(user)}
+                      onClick={() => downloadUserPDF(user)}
                     >
-                      <FaDownload /> Download
+                      <FaDownload /> Download PDF
                     </button>
                     <button 
                       className="action-button delete"
@@ -183,7 +320,7 @@ function AdminDashboard() {
               <h2>Registered Donors</h2>
               <button 
                 className="download-button"
-                onClick={() => downloadData(donors, 'donors-data')}
+                onClick={() => downloadAllDataPDF(donors, 'donors-data')}
               >
                 <FaDownload /> Download Donors Data
               </button>
@@ -205,9 +342,9 @@ function AdminDashboard() {
                   <div className="card-actions">
                     <button 
                       className="action-button download"
-                      onClick={() => downloadUserData(donor)}
+                      onClick={() => downloadUserPDF(donor)}
                     >
-                      <FaDownload /> Download
+                      <FaDownload /> Download PDF
                     </button>
                     <button 
                       className="action-button delete"
@@ -228,7 +365,7 @@ function AdminDashboard() {
               <h2>Registered Receivers</h2>
               <button 
                 className="download-button"
-                onClick={() => downloadData(receivers, 'receivers-data')}
+                onClick={() => downloadAllDataPDF(receivers, 'receivers-data')}
               >
                 <FaDownload /> Download Receivers Data
               </button>
@@ -245,9 +382,9 @@ function AdminDashboard() {
                   <div className="card-actions">
                     <button 
                       className="action-button download"
-                      onClick={() => downloadUserData(receiver)}
+                      onClick={() => downloadUserPDF(receiver)}
                     >
-                      <FaDownload /> Download
+                      <FaDownload /> Download PDF
                     </button>
                     <button 
                       className="action-button delete"
@@ -268,7 +405,7 @@ function AdminDashboard() {
               <h2>Blood Requests</h2>
               <button 
                 className="download-button"
-                onClick={() => downloadData(requests, 'requests-data')}
+                onClick={() => downloadAllDataPDF(requests, 'requests-data')}
               >
                 <FaDownload /> Download Requests Data
               </button>
@@ -296,4 +433,4 @@ function AdminDashboard() {
   );
 }
 
-export default AdminDashboard; 
+export default AdminDashboard;
